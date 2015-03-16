@@ -1,10 +1,10 @@
 {
   "name": "ddx3216http",
   "description": "Remote control a Behringer DDX3216 with a browser",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "main": "./main.js",
   "author": {
-    "name": "Wolfgang H",
+    "name": "Wolfgang H"
   },
   "keywords": [],
   "licenses": {
