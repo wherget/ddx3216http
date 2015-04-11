@@ -22,8 +22,13 @@ io.on('connection', function(socket){
   debug('a user connected');
   socket.on('aux', function (message) {
       var cmd = JSON.parse(message);
-      debug("Ch", cmd.channel, "Aux", cmd.aux, "@", cmd.value);
-      desk.channel(cmd.channel).setAuxSend(cmd.aux, cmd.value);
+      debug("Ch", cmd.channel, "Aux", cmd.parameter, "@", cmd.value);
+      desk.channel(cmd.channel).setAuxSend(cmd.parameter, cmd.value);
+  });
+  socket.on('vol', function (message) {
+      var cmd = JSON.parse(message);
+      debug("Ch", cmd.channel, "@", cmd.value);
+      desk.channel(cmd.channel).setVolume(cmd.value);
   });
 });
 

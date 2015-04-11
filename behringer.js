@@ -8,7 +8,7 @@ var debug = require('debug')('behringer');
  * @returns {Channel}
  */
 function Channel(channel_number, connection) {
-    this.channel = channel_number;
+    this.channel = channel_number - 1;
     this.connection = connection;
 };
 
@@ -76,6 +76,10 @@ Behringer.prototype.setDeviceChannel = function(channel) {
 Behringer.prototype.channel = function(channel_number) {
     return new Channel(channel_number, this);
 };
+
+Behringer.prototype.ping = function() {
+    this.sendCommand(this.assembleCommand([0x40]));
+}
 
 Behringer.prototype.sendCommand = function (commandBytes) {
     var sysexBytes = this.assembleCommand(commandBytes);
