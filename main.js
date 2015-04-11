@@ -13,6 +13,18 @@ if (output.getPortCount() < 1) {
 console.log("Sending on midi out", output.getPortName(0));
 output.openPort(0);
 
+var input = new midi.input();
+if (input.getPortCount() > 1) {
+    console.log("Receiving on midi in", input.getPortName(1));
+    input.openPort(1);
+    input.ignoreTypes(false,true,true);
+    input.on('message', function(deltaTime, message) {
+        console.log('m:' + message);
+    });
+} else {
+    console.log("Not listening.");
+}
+
 var behringer = require('./behringer');
 var desk = new behringer(output);
 
