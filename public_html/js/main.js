@@ -3,7 +3,7 @@ $("input.fader").slider('setValue', -80);
 
 var sockIO = io();
 
-$("input.fader").on("slideStop", function(event) {
+$("input.fader").on("slide", function(event) {
     var slider = $(event.currentTarget);
     var channel   = slider.data("channel");
     var outEvent  = slider.parents(".channel-strip").data("event");
