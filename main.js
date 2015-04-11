@@ -25,6 +25,11 @@ io.on('connection', function(socket){
       debug("Ch", cmd.channel, "Aux", cmd.parameter, "@", cmd.value);
       desk.channel(cmd.channel).setAuxSend(cmd.parameter, cmd.value);
   });
+  socket.on('vol', function (message) {
+      var cmd = JSON.parse(message);
+      debug("Ch", cmd.channel, "@", cmd.value);
+      desk.channel(cmd.channel).setVolume(cmd.value);
+  });
 });
 
 http.listen(9080, function(){
