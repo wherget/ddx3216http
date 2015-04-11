@@ -12,6 +12,7 @@ $("#next").on("click",function() {
     $("input.fader").each(function (index, el) {
         $(el).slider('setValue', -80);
     });
+    $(".channel-strip").data("parameter", auxInput.val());
 });
 
 $("#prev").on("click",function() {
@@ -19,17 +20,20 @@ $("#prev").on("click",function() {
     if (inputValue > 1) {
         auxInput.val(--inputValue);
     }
+    $(".channel-strip").data("parameter", auxInput.val());
 });
 
 $("input.fader").on("slideStop", function(event) {
-    var aux = auxInput.val();
-    var channel = $(event.currentTarget).data("channel");
+    var slider = $(event.currentTarget);
+    var channel   = slider.data("channel");
+    var outEvent  = slider.parents(".channel-strip").data("event");
+    var parameter = slider.parents(".channel-strip").data("parameter");
     var value = event.value;
-    console.log("Setting Channel "+channel+" Aux "+aux+" to "+value+"dB");
-    sockIO.emit('aux', 
+    console.log("Setting Channel "+channel+" ("+outEvent+" "+parameter+") to "+value);
+    sockIO.emit(outEvent,
         JSON.stringify(
-                { "channel": channel, 
-                  "aux": aux, 
+                { "channel": channel,
+                  "parameter": parameter,
                   "value": value
                 }
         )
