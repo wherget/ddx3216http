@@ -8,7 +8,7 @@ var debug = require('debug')('behringer');
  * @returns {Channel}
  */
 function Channel(channel_number, connection) {
-    this.channel = channel_number;
+    this.channel = channel_number - 1;
     this.connection = connection;
 };
 
