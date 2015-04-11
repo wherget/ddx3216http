@@ -44,6 +44,9 @@ io.on('connection', function(socket){
   });
 });
 
+desk.ping();
+desk.requestMeterData();
+
 http.listen(9080, function(){
   console.log('listening on *:9080');
 });
