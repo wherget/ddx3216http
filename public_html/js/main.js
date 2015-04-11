@@ -12,6 +12,7 @@ $("#next").on("click",function() {
     $("input.fader").each(function (index, el) {
         $(el).slider('setValue', -80);
     });
+    $(".channel-strip").data("parameter", auxInput.val());
 });
 
 $("#prev").on("click",function() {
@@ -19,6 +20,7 @@ $("#prev").on("click",function() {
     if (inputValue > 1) {
         auxInput.val(--inputValue);
     }
+    $(".channel-strip").data("parameter", auxInput.val());
 });
 
 $("input.fader").on("slideStop", function(event) {
