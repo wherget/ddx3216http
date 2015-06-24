@@ -7,7 +7,7 @@ var debug = require('debug')('behringer');
  * @param {Behringer} connection
  * @returns {Channel}
  */
-function Channel(channel_number, connection) {
+var Channel = function (channel_number, connection) {
     this.channel = channel_number - 1;
     this.connection = connection;
 };
@@ -57,7 +57,7 @@ Channel.prototype.paramChange = function(parameter, parameterValue) {
  * @param {number} deviceChannel
  * @returns {Behringer}
  */
-function Behringer(out, deviceChannel) {
+var Behringer = function (out, deviceChannel, input) {
     this.midi_out = out;
     Behringer.prototype.setDeviceChannel.apply(this, deviceChannel);
 };
