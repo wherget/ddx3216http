@@ -56,7 +56,7 @@ Channel.prototype.paramChange = function(parameter, parameterValue) {
     sysex.push(this.channel);
     sysex.push(parameter);
     var low7bit  = parameterValue & 0x7F;
-    var high7bit = (parameterValue >>> 7) & 0x7F;
+    var high7bit = (parameterValue >> 7) & 0x7F;
     sysex.push(high7bit, low7bit);
     return sysex;
 };
