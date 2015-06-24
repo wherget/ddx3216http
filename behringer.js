@@ -10,9 +10,17 @@ var debug = require('debug')('behringer');
 var Channel = function (channel_number, connection) {
     this.channel = channel_number - 1;
     this.connection = connection;
+    this.volume_db = -80;
+    this.aux = [
+        {db: -80, pre: false},
+        {db: -80, pre: false},
+        {db: -80, pre: false},
+        {db: -80, pre: false}
+    ];
 };
 
 Channel.prototype.setAuxSend = function(aux_ch, db) {
+    this.aux[aux_ch - 1].pre = isPre;
     // aux1=70, aux2=72, ...
     var parameterNumber = ((aux_ch - 1) * 2) + 70;
     var dBValue = this.fullrangeValue(db);
@@ -21,6 +29,7 @@ Channel.prototype.setAuxSend = function(aux_ch, db) {
 };
 
 Channel.prototype.setAuxPre = function(aux_ch, isPre) {
+    this.aux[aux_ch - 1].pre = isPre;
     // pre-post aux1=71, aux2=73, ...
     var parameterNumber = ((aux_ch - 1) * 2) + 71;
     var sysex = this.paramChange(parameterNumber, isPre ? 1 : 0);
@@ -28,6 +37,7 @@ Channel.prototype.setAuxPre = function(aux_ch, isPre) {
 };
 
 Channel.prototype.setVolume = function(dB) {
+    this.volume_db = dB;
     var sysex = this.paramChange(1, this.fullrangeValue(dB));
     this.connection.sendCommand(sysex);
 }
