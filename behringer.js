@@ -79,11 +79,11 @@ Behringer.prototype.channel = function(channel_number) {
 
 Behringer.prototype.ping = function() {
     this.sendCommand(this.assembleCommand([0x40]));
-}
+};
 
 Behringer.prototype.requestMeterData = function() {
     this.sendCommand(this.assembleCommand([0x4F]));
-}
+};
 
 Behringer.prototype.sendCommand = function (commandBytes) {
     var sysexBytes = this.assembleCommand(commandBytes);
