@@ -60,6 +60,7 @@ Channel.prototype.paramChange = function(parameter, parameterValue) {
 var Behringer = function (out, deviceChannel, input) {
     this.midi_out = out;
     Behringer.prototype.setDeviceChannel.apply(this, deviceChannel);
+    Behringer.prototype.createChannels.apply(this);
 };
 
 Behringer.prototype.setDeviceChannel = function(channel) {
@@ -74,7 +75,7 @@ Behringer.prototype.setDeviceChannel = function(channel) {
 };
 
 Behringer.prototype.channel = function(channel_number) {
-    return new Channel(channel_number, this);
+    return this.channels[channel_number];
 };
 
 Behringer.prototype.ping = function() {
