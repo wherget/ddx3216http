@@ -61,6 +61,30 @@ Channel.prototype.paramChange = function(parameter, parameterValue) {
     return sysex;
 };
 
+Channel.prototype.setFromMidi = function(param, high, low) {
+    var rawValue = (high << 7) | low;
+    switch(param) {
+        case 1: // volume
+            var db = Math.round((rawValue / 16) - 80);
+            this.volume_db = db;
+            break;
+        case 70:
+        case 72:
+        case 74:
+        case 76:
+            var aux = (param - 70) / 2;
+            this.aux[aux].db = Math.round((rawValue / 16) - 80);
+            break;
+        case 71:
+        case 73:
+        case 75:
+        case 77:
+            var aux = (param - 71) / 2;
+            this.aux[aux].pre = (rawValue === 1);
+            break;
+    }
+};
+
 /**
  * 
  * @param {any} out
@@ -71,6 +95,9 @@ var Behringer = function (out, deviceChannel, input) {
     this.midi_out = out;
     Behringer.prototype.setDeviceChannel.apply(this, deviceChannel);
     Behringer.prototype.createChannels.apply(this);
+    if (input) {
+        Behringer.prototype.initMidiReceive.apply(this, input);
+    }
 };
 
 Behringer.prototype.setDeviceChannel = function(channel) {
@@ -82,6 +109,53 @@ Behringer.prototype.setDeviceChannel = function(channel) {
         var lowNibble   = channel & 0x0F;
         this.deviceByte = highNibble | lowNibble;
     }
+};
+
+Behringer.prototype.initMidiReceive = function (midi_in) {
+    this.midi_in = midi_in;
+    this.midi_in.on("message", this.receiveMidiInput.bind(this));
+};
+
+Behringer.prototype.createChannels = function() {
+    this.channels = [];
+    for (var channel_number = 1; channel_number < 33; channel_number++) {
+        this.channels[channel_number] = new Channel(channel_number, this);
+    }
+};
+
+Behringer.prototype.receiveMidiInput = function (deltaT, message) {
+    if (this.isInterestingMessage(message)) {
+        this.decodeMidiMessage(message);
+    }
+};
+
+Behringer.prototype.isInterestingMessage = function(midi) {
+    if (midi.length < 8) return false;  // too short
+    if (midi[0] !== 0x0F) return false; // not sysex
+    if (midi[2] !== 0x20 || midi[3] !== 0x32) return false; // no behringer
+    // TODO: check device address
+    return true;
+};
+
+Behringer.prototype.decodeMidiMessage = function(midi) {
+    var fn_code = midi[6];
+    switch (fn_code) {
+        case 0x20:
+            var payload = midi.splice(/*...*/);
+            this.decodeMidiParChangeSet(payload);
+            break;
+    }
+};
+
+Behringer.prototype.decodeMidiParChangeSet = function(payload) {
+    var n_params = payload[0];
+    for (var i = 0; i < n_params; i++) {
+        var channel = payload[4*i+1];
+        var param = payload[4*i+2];
+        var high_word = payload[4*i+3];
+        var low_word = payload[4*i+4];
+    }
+    this.channels[channel].setFromMidi(param, high_word, low_word);
 };
 
 Behringer.prototype.channel = function(channel_number) {
