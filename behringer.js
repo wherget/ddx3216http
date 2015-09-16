@@ -131,7 +131,7 @@ Behringer.prototype.receiveMidiInput = function (deltaT, message) {
 
 Behringer.prototype.isInterestingMessage = function(midi) {
     if (midi.length < 8) return false;  // too short
-    if (midi[0] !== 0x0F) return false; // not sysex
+    if (midi[0] !== 0xF0) return false; // not sysex
     if (midi[2] !== 0x20 || midi[3] !== 0x32) return false; // no behringer
     // TODO: check device address
     return true;
