@@ -141,7 +141,7 @@ Behringer.prototype.decodeMidiMessage = function(midi) {
     var fn_code = midi[6];
     switch (fn_code) {
         case 0x20:
-            var payload = midi.splice(/*...*/);
+            var payload = midi.splice(7);
             this.decodeMidiParChangeSet(payload);
             break;
     }
@@ -149,13 +149,15 @@ Behringer.prototype.decodeMidiMessage = function(midi) {
 
 Behringer.prototype.decodeMidiParChangeSet = function(payload) {
     var n_params = payload[0];
+    debug("Received", n_params, "parameters");
     for (var i = 0; i < n_params; i++) {
-        var channel = payload[4*i+1];
+        var channel = payload[4*i+1] + 1; // 0-based from midi to 1-based here
         var param = payload[4*i+2];
         var high_word = payload[4*i+3];
         var low_word = payload[4*i+4];
+	
+        this.channels[channel].setFromMidi(param, high_word, low_word);
     }
-    this.channels[channel].setFromMidi(param, high_word, low_word);
 };
 
 Behringer.prototype.channel = function(channel_number) {
