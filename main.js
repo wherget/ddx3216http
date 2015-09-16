@@ -26,7 +26,7 @@ if (input.getPortCount() > 1) {
 }
 
 var behringer = require('./behringer');
-var desk = new behringer(output);
+var desk = new behringer(output, undefined, input);
 
 app.use("/", express.static("public_html"));
 
