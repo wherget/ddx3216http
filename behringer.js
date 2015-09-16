@@ -93,10 +93,10 @@ Channel.prototype.setFromMidi = function(param, high, low) {
  */
 var Behringer = function (out, deviceChannel, input) {
     this.midi_out = out;
-    Behringer.prototype.setDeviceChannel.apply(this, deviceChannel);
-    Behringer.prototype.createChannels.apply(this);
+    Behringer.prototype.setDeviceChannel.call(this, deviceChannel);
+    Behringer.prototype.createChannels.call(this);
     if (input) {
-        Behringer.prototype.initMidiReceive.apply(this, input);
+        Behringer.prototype.initMidiReceive.call(this, input);
     }
 };
 
