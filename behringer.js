@@ -159,7 +159,11 @@ Behringer.prototype.decodeMidiParChangeSet = function(payload) {
         var high_word = payload[4*i+3];
         var low_word = payload[4*i+4];
 	
-        this.channels[channel].setFromMidi(param, high_word, low_word);
+	if (!this.channels[channel]) {
+            debug("Missing Channel", channel);
+        } else {
+            this.channels[channel].setFromMidi(param, high_word, low_word);
+        }
     }
 };
 
