@@ -18,9 +18,6 @@ if (input.getPortCount() > 1) {
     console.log("Receiving on midi in", input.getPortName(1));
     input.openPort(1);
     input.ignoreTypes(false,true,true);
-    input.on('message', function(deltaTime, message) {
-        console.log('m:' + message);
-    });
 } else {
     console.log("Not listening.");
 }
