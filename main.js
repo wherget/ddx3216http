@@ -13,8 +13,17 @@ if (output.getPortCount() < 1) {
 console.log("Sending on midi out", output.getPortName(0));
 output.openPort(0);
 
+var input = new midi.input();
+if (input.getPortCount() > 1) {
+    console.log("Receiving on midi in", input.getPortName(1));
+    input.openPort(1);
+    input.ignoreTypes(false,true,true);
+} else {
+    console.log("Not listening.");
+}
+
 var behringer = require('./behringer');
-var desk = new behringer(output);
+var desk = new behringer(output, undefined, input);
 
 app.use("/", express.static("public_html"));
 
@@ -30,7 +39,23 @@ io.on('connection', function(socket){
       debug("Ch", cmd.channel, "@", cmd.value);
       desk.channel(cmd.channel).setVolume(cmd.value);
   });
+  socket.on('get', function (message, cb) {
+      var cmd = JSON.parse(message);
+      debug("Get", cmd);
+      var channel = desk.channel(cmd.channel);
+      switch (cmd.setting) {
+          case "vol":
+              cb(channel.getVolume());
+              break;
+          case "aux":
+              cb(channel.getAuxSend(cmd.parameter));
+              break;
+      }
+  });
 });
+
+desk.ping();
+desk.requestMeterData();
 
 http.listen(9080, function(){
   console.log('listening on *:9080');

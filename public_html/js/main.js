@@ -19,3 +19,22 @@ $("input.fader").on("slide", function(event) {
         )
     );
 });
+
+sockIO.on('connect', function() {
+$("input.fader").each(function(number, dom) {
+    var slider = $(dom);
+    var channel   = slider.data("channel");
+    var outEvent  = slider.parents(".channel-strip").data("event");
+    var parameter = slider.parents(".channel-strip").data("parameter");
+    var what = JSON.stringify({
+        "channel": channel,
+        "setting": outEvent,
+        "parameter": parameter
+    });
+    sockIO.emit("get", what, function(reply){
+        console.log("Got reply", reply);
+        slider.slider("setValue", reply);
+    });
+});
+
+});
