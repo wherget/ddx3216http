@@ -20,7 +20,7 @@ var Channel = function (channel_number, connection) {
 };
 
 Channel.prototype.setAuxSend = function(aux_ch, db) {
-    this.aux[aux_ch - 1].pre = isPre;
+    this.aux[aux_ch - 1].db = db;
     // aux1=70, aux2=72, ...
     var parameterNumber = ((aux_ch - 1) * 2) + 70;
     var dBValue = this.fullrangeValue(db);
