@@ -124,6 +124,8 @@ Behringer.prototype.createChannels = function() {
     for (var channel_number = 1; channel_number < 33; channel_number++) {
         this.channels[channel_number] = new Channel(channel_number, this);
     }
+    this.channels[65] = new Channel(65, this); // master left
+    this.channels[66] = new Channel(66, this); // master right
 };
 
 Behringer.prototype.receiveMidiInput = function (deltaT, message) {
