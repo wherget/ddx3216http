@@ -30,6 +30,19 @@ io.on('connection', function(socket){
       debug("Ch", cmd.channel, "@", cmd.value);
       desk.channel(cmd.channel).setVolume(cmd.value);
   });
+  socket.on('get', function (message, cb) {
+      var cmd = JSON.parse(message);
+      debug("Get", cmd);
+      var channel = desk.channel(cmd.channel);
+      switch (cmd.setting) {
+          case "vol":
+              cb(channel.getVolume());
+              break;
+          case "aux":
+              cb(channel.getAuxSend(cmd.parameter));
+              break;
+      }
+  });
 });
 
 http.listen(9080, function(){
