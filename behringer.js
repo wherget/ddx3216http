@@ -20,6 +20,10 @@ Channel.prototype.setAuxSend = function(aux_ch, db) {
     this.connection.sendCommand(sysex);
 };
 
+Channel.prototype.getAuxSend = function(aux_ch) {
+    return this.aux[aux_ch - 1].db;
+};
+
 Channel.prototype.setAuxPre = function(aux_ch, isPre) {
     // pre-post aux1=71, aux2=73, ...
     var parameterNumber = ((aux_ch - 1) * 2) + 71;
@@ -30,6 +34,10 @@ Channel.prototype.setAuxPre = function(aux_ch, isPre) {
 Channel.prototype.setVolume = function(dB) {
     var sysex = this.paramChange(1, this.fullrangeValue(dB));
     this.connection.sendCommand(sysex);
+}
+
+Channel.prototype.getVolume = function() {
+   return this.volume_db;
 }
 
 Channel.prototype.fullrangeValue = function(db_fraction) {
