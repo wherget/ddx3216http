@@ -4,22 +4,39 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var midi = require('midi');
 var debug = require('debug')('ddx3216http')
+var argparse = require('argparse');
+
+const parse = new argparse.ArgumentParser({description: 'DDX3216http'});
+parse.add_argument("-l","--list", { help: 'List MIDI devices', action: 'store_const', const: true, default: false });
+parse.add_argument("-i","--input", { help: 'Use Device <INPUT> for input', type: 'int', default: 1 });
+parse.add_argument("-o","--output", { help: 'Use Device <INPUT> for output', type: 'int', default: 0 });
+var args = parse.parse_args();
 
 var output = new midi.output();
+var input = new midi.input();
+
+if (args.list) {
+  console.log("Device List:");
+  var inputCount = input.getPortCount();
+  for (var i = 0; i < inputCount; i++) console.log("Input "+i+": "+input.getPortName(i));
+  var outputCount = output.getPortCount();
+  for (var i = 0; i < outputCount; i++) console.log("Output "+i+": "+input.getPortName(i));
+  process.exit(0);
+}
+
 if (output.getPortCount() < 1) {
     console.log("No midi outs.");
     process.exit(1);
 }
-console.log("Sending on midi out", output.getPortName(0));
-output.openPort(0);
+console.log("Sending on MIDI port", args.output, ":", output.getPortName(args.output));
+output.openPort(args.output);
 
-var input = new midi.input();
-if (input.getPortCount() > 1) {
-    console.log("Receiving on midi in", input.getPortName(1));
-    input.openPort(1);
-    input.ignoreTypes(false,true,true);
+if (input.getPortCount() < (args.input + 1)) {
+    console.log("Input Port", args.input, "not available. Not listening.");
 } else {
-    console.log("Not listening.");
+    console.log("Receiving on MIDI port", args.input, input.getPortName(args.input));
+    input.openPort(args.input);
+    input.ignoreTypes(false,true,true);
 }
 
 var behringer = require('./behringer');
