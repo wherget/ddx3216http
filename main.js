@@ -74,6 +74,7 @@ io.on('connection', function(socket){
 desk.ping();
 desk.requestMeterData();
 
-http.listen(9080, function(){
-  console.log('listening on *:9080');
+var port = 9080;
+http.listen(port, function(){
+  console.log('listening on *:'+port+', you can open http://localhost:'+port+' to connect.');
 });
