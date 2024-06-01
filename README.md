@@ -10,14 +10,18 @@ It is inspired by the various control apps available for newer digital mixers.
 How to use
 ----------
 
-You need to have a MIDI output device on your computer.
+You need to have a MIDI output device on your computer. (An input device is optional.)
 You also need a C++ compiler, to allow the required `midi` module to compile.
 Then, just run:
 
-    npm install
-    node main
+```
+npm install
+node main
+```
 
 The first available MIDI output will be used to talk to the desk.
-If a description is available, it will be printed on startup.
+Due to quirks on the development setup, it will try to receive updates from the desk via the **second** MIDI input.
+If a device description is available, it will be printed on startup.
+You can select other devices using the command line. Run `node main --help` for a short help.
 
 When the server is running, navigate a browser to http://localhost:9080/.
