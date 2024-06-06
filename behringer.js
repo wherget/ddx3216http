@@ -1,6 +1,8 @@
 
 var debug = require('debug')('behringer');
 
+const ALL_DEVICES = 0x60;
+
 /**
  * 
  * @param {number} channel_number
@@ -114,7 +116,7 @@ var Behringer = function (out, deviceChannel, input) {
 Behringer.prototype.setDeviceChannel = function(channel) {
     // 0ab0 cccc; a=ignore AppID, b=ignore Channel, c=Channel
     if (channel === undefined) {
-        this.deviceByte = 0x60; // ignore appID, ignore channel
+        this.deviceByte = ALL_DEVICES; // ignore appID, ignore channel
     } else {
         var highNibble  = 0x40; // ignore appID
         var lowNibble   = channel & 0x0F;
@@ -146,7 +148,11 @@ Behringer.prototype.isInterestingMessage = function(midi) {
     if (midi.length < 8) return false;  // too short
     if (midi[0] !== 0xF0) return false; // not sysex
     if (midi[2] !== 0x20 || midi[3] !== 0x32) return false; // no behringer
-    // TODO: check device address
+    if (this.deviceByte !== ALL_DEVICES) { // check device
+        var rxNibble = midi[4] & 0xF;
+        var ourNibble = this.deviceByte & 0xF;
+        if (rxNibble !== ourNibble) return false;
+    }
     return true;
 };
 
