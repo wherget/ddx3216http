@@ -8,6 +8,7 @@ var argparse = require('argparse');
 
 const parse = new argparse.ArgumentParser({description: 'DDX3216http'});
 parse.add_argument("-l","--list", { help: 'List MIDI devices', action: 'store_const', const: true, default: false });
+parse.add_argument("-d","--dev", { help: 'Use Device number (1..16)', type: 'int', default: undefined });
 parse.add_argument("-i","--input", { help: 'Use Device <INPUT> for input', type: 'int', default: 1 });
 parse.add_argument("-o","--output", { help: 'Use Device <INPUT> for output', type: 'int', default: 0 });
 var args = parse.parse_args();
@@ -39,8 +40,14 @@ if (input.getPortCount() < (args.input + 1)) {
     input.ignoreTypes(false,true,true);
 }
 
+if (args.dev !== undefined) {
+    console.log("Using Device ", args.dev);
+    args.dev -= 1;
+} else {
+    console.log("Sending for all devices");
+}
 var behringer = require('./behringer');
-var desk = new behringer(output, undefined, input);
+var desk = new behringer(output, args.dev, input);
 
 app.use("/", express.static("public_html"));
 
