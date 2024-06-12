@@ -170,6 +170,9 @@ Behringer.prototype.decodeMidiMessage = function(midi) {
             var payload = midi.splice(7);
             this.decodeMidiParChangeSet(payload);
             break;
+        case 0x00:
+            debug("Received Pong, Desk MMC Channel:", midi[7]);
+            break;
     }
 };
 
