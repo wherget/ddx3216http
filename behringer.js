@@ -120,12 +120,14 @@ Channel.prototype.emitMidiEvent = function(eventName) {
  * @returns {Behringer}
  */
 var Behringer = function (out, deviceChannel, input) {
+    this.events = Mitt();
     this.midi_out = out;
     Behringer.prototype.setDeviceChannel.call(this, deviceChannel);
     Behringer.prototype.createChannels.call(this);
     if (input) {
         Behringer.prototype.initMidiReceive.call(this, input);
     }
+    this.eventForward = this.forwardChannelEvent.bind(this);
 };
 
 Behringer.prototype.setDeviceChannel = function(channel) {
@@ -144,10 +146,15 @@ Behringer.prototype.initMidiReceive = function (midi_in) {
     this.midi_in.on("message", this.receiveMidiInput.bind(this));
 };
 
+Behringer.prototype.forwardChannelEvent = function(type, param) {
+    this.events.emit(type, param);
+};
+
 Behringer.prototype.createChannels = function() {
     this.channels = [];
     for (var channel_number = 1; channel_number < 33; channel_number++) {
         this.channels[channel_number] = new Channel(channel_number, this);
+        this.channels[channel_number].events.on('*', this.eventForward);
     }
     this.channels[65] = new Channel(65, this); // master left
     this.channels[66] = new Channel(66, this); // master right
