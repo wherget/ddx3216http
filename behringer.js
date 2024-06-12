@@ -195,6 +195,10 @@ Behringer.prototype.channel = function(channel_number) {
 };
 
 Behringer.prototype.ping = function() {
+    // file dump protocol! (as per sysex page 19)
+    // function byte: 0rffffff
+    // r=1: request
+    // f=0: tell me deviceId and MMC channel
     this.sendCommand([0x40]);
 };
 
