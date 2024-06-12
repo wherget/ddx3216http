@@ -1,5 +1,6 @@
+var Debugger = require('debug');
+var debug = Debugger('behringer');
 
-var debug = require('debug')('behringer');
 
 const ALL_DEVICES = 0x60;
 
