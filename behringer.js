@@ -1,5 +1,10 @@
+var Debugger = require('debug');
+var debug = Debugger('behringer');
+var debug_sysex = Debugger('sysex');
 
-var debug = require('debug')('behringer');
+var toHexString = function(intArray) {
+	return intArray.map(function(n){return n.toString(16);}).join(" ")
+}
 
 const ALL_DEVICES = 0x60;
 
@@ -139,6 +144,7 @@ Behringer.prototype.createChannels = function() {
 };
 
 Behringer.prototype.receiveMidiInput = function (deltaT, message) {
+    debug_sysex("Received", toHexString(message));
     if (this.isInterestingMessage(message)) {
         this.decodeMidiMessage(message);
     }
@@ -151,6 +157,7 @@ Behringer.prototype.isInterestingMessage = function(midi) {
     if (this.deviceByte !== ALL_DEVICES) { // check device
         var rxNibble = midi[4] & 0xF;
         var ourNibble = this.deviceByte & 0xF;
+        debug_sysex("Rx channel:", rxNibble, " Our channel:", ourNibble);
         if (rxNibble !== ourNibble) return false;
     }
     return true;
@@ -197,7 +204,7 @@ Behringer.prototype.requestMeterData = function() {
 
 Behringer.prototype.sendCommand = function (commandBytes) {
     var sysexBytes = this.assembleCommand(commandBytes);
-    debug("Sending SysEx:", sysexBytes.map(function(n){return n.toString(16);}));
+    debug_sysex("Sending:", toHexString(sysexBytes));
     this.midi_out.sendMessage(sysexBytes);
 };
 
