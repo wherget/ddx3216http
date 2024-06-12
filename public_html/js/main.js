@@ -37,4 +37,18 @@ $("input.fader").each(function(number, dom) {
     });
 });
 
+sockIO.on('midi', function(msg) {
+	console.log("Midi from Desk", msg);
+    var selector = ".channel-strip[data-event="+msg.setting+"]";
+    if (msg.parameter !== undefined) {
+        selector += "[data-parameter="+msg.parameter+"]";
+    }
+    var slider = $(selector + " .fader[data-channel="+msg.channelNumber+"]");
+    if (slider.length < 1) {
+        console.log("Looks like we're not showing channel", msg.channelNumber, " event ", msg.setting, "param", msg.parameter);
+        return;
+    }
+    slider.slider("setValue", msg.value);
+});
+
 });

@@ -85,16 +85,17 @@ Channel.prototype.setFromMidi = function(param, high, low) {
             var db = Math.round((rawValue / 16) - 80);
             this.volume_db = db;
             debug("Channel", this.channel, "set volume", db, "dB");
-            emitMidiEvent('volume');
+            this.emitMidiEvent('vol', undefined, db);
             break;
         case 70:
         case 72:
         case 74:
         case 76:
             var aux = (param - 70) / 2;
-            this.aux[aux].db = Math.round((rawValue / 16) - 80);
+            var db = Math.round((rawValue / 16) - 80);
+            this.aux[aux].db = db;
             debug("Channel", this.channel, "set aux", aux, "send", this.aux[aux].db, "dB");
-            this.emitMidiEvent('aux');
+            this.emitMidiEvent('aux', aux, db);
             break;
         case 71:
         case 73:
@@ -108,9 +109,18 @@ Channel.prototype.setFromMidi = function(param, high, low) {
     }
 };
 
-Channel.prototype.emitMidiEvent = function(eventName) {
-    this.events.emit(eventName, {channel: this});
-    this.events.emit('midi', {channel: this});
+Channel.prototype.emitMidiEvent = function(eventName, parameter, newValue) {
+    this.events.emit(eventName, {
+        channel: this,
+        parameter: parameter,
+        value: newValue
+    });
+    this.events.emit('midi', {
+        channel: this,
+        setting: eventName,
+        parameter: parameter,
+        value: newValue
+    });
 }
 
 /**
@@ -122,12 +132,12 @@ Channel.prototype.emitMidiEvent = function(eventName) {
 var Behringer = function (out, deviceChannel, input) {
     this.events = Mitt();
     this.midi_out = out;
+    this.eventForward = Behringer.prototype.forwardChannelEvent.bind(this);
     Behringer.prototype.setDeviceChannel.call(this, deviceChannel);
     Behringer.prototype.createChannels.call(this);
     if (input) {
         Behringer.prototype.initMidiReceive.call(this, input);
     }
-    this.eventForward = this.forwardChannelEvent.bind(this);
 };
 
 Behringer.prototype.setDeviceChannel = function(channel) {

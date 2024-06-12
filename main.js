@@ -79,6 +79,20 @@ io.on('connection', function(socket){
 });
 
 desk.ping();
+desk.events.on('midi', function(param) {
+    var ch = param.channel.channel+1;
+    debug('Forward Midi to Web: ', ch);
+    var parameter = param.parameter;
+    if (parameter !== undefined) {
+        parameter += 1;
+    }
+    io.emit('midi', {
+        channelNumber: ch,
+        setting: param.setting,
+        parameter: parameter,
+        value: param.value
+    });
+})
 desk.requestMeterData();
 
 var port = 9080;
