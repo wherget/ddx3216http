@@ -26,6 +26,10 @@ You can select other devices using the command line. Run `node main --help` for 
 
 When the server is running, navigate a browser to http://localhost:9080/.
 
+Parameters are picked up as they are changed.
+You can load a preset on the desk to make all settings known to the HTTP interface.
+If there exists a possibility to read the current state from the desk without a load cycle, I haven't found it yet.
+
 How to set up your desk
 -----------------------
 
