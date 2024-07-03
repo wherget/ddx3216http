@@ -1,5 +1,14 @@
+var Mitt = require('mitt');
+var Debugger = require('debug');
+var debug = Debugger('behringer');
+var debug_sysex = Debugger('sysex');
 
-var debug = require('debug')('behringer');
+var toHexString = function(intArray) {
+	return intArray.map(function(n){return n.toString(16);}).join(" ")
+}
+
+const ALL_DEVICES = 0x60;
+const PARAMETER_CHANGE = 0x20;
 
 /**
  * 
@@ -8,6 +17,7 @@ var debug = require('debug')('behringer');
  * @returns {Channel}
  */
 var Channel = function (channel_number, connection) {
+    this.events = Mitt();
     this.channel = channel_number - 1;
     this.connection = connection;
     this.volume_db = -80;
@@ -59,7 +69,7 @@ Channel.prototype.fullrangeValue = function(db_fraction) {
 
 Channel.prototype.paramChange = function(parameter, parameterValue) {
     var sysex = [];
-    sysex.push(0x20); // function code, 20 = parameter change
+    sysex.push(PARAMETER_CHANGE); // function code
     sysex.push(1); // number of parameter changes (up to 23)
     sysex.push(this.channel);
     sysex.push(parameter);
@@ -76,14 +86,17 @@ Channel.prototype.setFromMidi = function(param, high, low) {
             var db = Math.round((rawValue / 16) - 80);
             this.volume_db = db;
             debug("Channel", this.channel, "set volume", db, "dB");
+            this.emitMidiEvent('vol', undefined, db);
             break;
         case 70:
         case 72:
         case 74:
         case 76:
             var aux = (param - 70) / 2;
-            this.aux[aux].db = Math.round((rawValue / 16) - 80);
+            var db = Math.round((rawValue / 16) - 80);
+            this.aux[aux].db = db;
             debug("Channel", this.channel, "set aux", aux, "send", this.aux[aux].db, "dB");
+            this.emitMidiEvent('aux', aux, db);
             break;
         case 71:
         case 73:
@@ -92,9 +105,24 @@ Channel.prototype.setFromMidi = function(param, high, low) {
             var aux = (param - 71) / 2;
             this.aux[aux].pre = (rawValue === 1);
             debug("Channel", this.channel, "set aux", aux, "pre", this.aux[aux].pre);
+            this.emitMidiEvent('aux_pre');
             break;
     }
 };
+
+Channel.prototype.emitMidiEvent = function(eventName, parameter, newValue) {
+    this.events.emit(eventName, {
+        channel: this,
+        parameter: parameter,
+        value: newValue
+    });
+    this.events.emit('midi', {
+        channel: this,
+        setting: eventName,
+        parameter: parameter,
+        value: newValue
+    });
+}
 
 /**
  * 
@@ -103,7 +131,9 @@ Channel.prototype.setFromMidi = function(param, high, low) {
  * @returns {Behringer}
  */
 var Behringer = function (out, deviceChannel, input) {
+    this.events = Mitt();
     this.midi_out = out;
+    this.eventForward = Behringer.prototype.forwardChannelEvent.bind(this);
     Behringer.prototype.setDeviceChannel.call(this, deviceChannel);
     Behringer.prototype.createChannels.call(this);
     if (input) {
@@ -114,7 +144,7 @@ var Behringer = function (out, deviceChannel, input) {
 Behringer.prototype.setDeviceChannel = function(channel) {
     // 0ab0 cccc; a=ignore AppID, b=ignore Channel, c=Channel
     if (channel === undefined) {
-        this.deviceByte = 0x60; // ignore appID, ignore channel
+        this.deviceByte = ALL_DEVICES; // ignore appID, ignore channel
     } else {
         var highNibble  = 0x40; // ignore appID
         var lowNibble   = channel & 0x0F;
@@ -127,16 +157,22 @@ Behringer.prototype.initMidiReceive = function (midi_in) {
     this.midi_in.on("message", this.receiveMidiInput.bind(this));
 };
 
+Behringer.prototype.forwardChannelEvent = function(type, param) {
+    this.events.emit(type, param);
+};
+
 Behringer.prototype.createChannels = function() {
     this.channels = [];
     for (var channel_number = 1; channel_number < 33; channel_number++) {
         this.channels[channel_number] = new Channel(channel_number, this);
+        this.channels[channel_number].events.on('*', this.eventForward);
     }
     this.channels[65] = new Channel(65, this); // master left
     this.channels[66] = new Channel(66, this); // master right
 };
 
 Behringer.prototype.receiveMidiInput = function (deltaT, message) {
+    debug_sysex("Received", toHexString(message));
     if (this.isInterestingMessage(message)) {
         this.decodeMidiMessage(message);
     }
@@ -146,7 +182,12 @@ Behringer.prototype.isInterestingMessage = function(midi) {
     if (midi.length < 8) return false;  // too short
     if (midi[0] !== 0xF0) return false; // not sysex
     if (midi[2] !== 0x20 || midi[3] !== 0x32) return false; // no behringer
-    // TODO: check device address
+    if (this.deviceByte !== ALL_DEVICES) { // check device
+        var rxNibble = midi[4] & 0xF;
+        var ourNibble = this.deviceByte & 0xF;
+        debug_sysex("Rx channel:", rxNibble, " Our channel:", ourNibble);
+        if (rxNibble !== ourNibble) return false;
+    }
     return true;
 };
 
@@ -156,6 +197,9 @@ Behringer.prototype.decodeMidiMessage = function(midi) {
         case 0x20:
             var payload = midi.splice(7);
             this.decodeMidiParChangeSet(payload);
+            break;
+        case 0x00:
+            debug("Received Pong, Desk MMC Channel:", midi[7]);
             break;
     }
 };
@@ -182,6 +226,10 @@ Behringer.prototype.channel = function(channel_number) {
 };
 
 Behringer.prototype.ping = function() {
+    // file dump protocol! (as per sysex page 19)
+    // function byte: 0rffffff
+    // r=1: request
+    // f=0: tell me deviceId and MMC channel
     this.sendCommand([0x40]);
 };
 
@@ -191,7 +239,7 @@ Behringer.prototype.requestMeterData = function() {
 
 Behringer.prototype.sendCommand = function (commandBytes) {
     var sysexBytes = this.assembleCommand(commandBytes);
-    debug("Sending SysEx:", sysexBytes.map(function(n){return n.toString(16);}));
+    debug_sysex("Sending:", toHexString(sysexBytes));
     this.midi_out.sendMessage(sysexBytes);
 };
 
