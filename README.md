@@ -25,3 +25,24 @@ If a device description is available, it will be printed on startup.
 You can select other devices using the command line. Run `node main --help` for a short help.
 
 When the server is running, navigate a browser to http://localhost:9080/.
+
+Parameters are picked up as they are changed.
+You can load a preset on the desk to make all settings known to the HTTP interface.
+If there exists a possibility to read the current state from the desk without a load cycle, I haven't found it yet.
+
+How to set up your desk
+-----------------------
+
+- Enable SYSEX via MIDI: Press the "Files" Button, and in the "Exchange" tab, set "File Exchange via" to "MIDI"
+- Enable Parameters: Press the "MMC/MIDI" Button, and in the "Rx/Tx" tab, enable Rx and Tx for "Direct Par.Excl.", as well as everything in the "Rx/Tx only" section.
+- Connect the MIDI Out port of the desk to the input of your computer's MIDI device
+- Connect the output of your computer's MIDI to the MIDI In port of the desk.
+
+Debugging
+---------
+
+If you want more verbose output of what is happening, you can enable select debug logging channels by setting the `DEBUG` environment variable, e.g.
+
+```
+DEBUG=sysex,behringer,ddx3216http node main
+```
