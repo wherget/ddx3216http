@@ -1,3 +1,4 @@
+var Mitt = require('mitt');
 var Debugger = require('debug');
 var debug = Debugger('behringer');
 var debug_sysex = Debugger('sysex');
@@ -7,6 +8,7 @@ var toHexString = function(intArray) {
 }
 
 const ALL_DEVICES = 0x60;
+const PARAMETER_CHANGE = 0x20;
 
 /**
  * 
@@ -15,6 +17,7 @@ const ALL_DEVICES = 0x60;
  * @returns {Channel}
  */
 var Channel = function (channel_number, connection) {
+    this.events = Mitt();
     this.channel = channel_number - 1;
     this.connection = connection;
     this.volume_db = -80;
@@ -66,7 +69,7 @@ Channel.prototype.fullrangeValue = function(db_fraction) {
 
 Channel.prototype.paramChange = function(parameter, parameterValue) {
     var sysex = [];
-    sysex.push(0x20); // function code, 20 = parameter change
+    sysex.push(PARAMETER_CHANGE); // function code
     sysex.push(1); // number of parameter changes (up to 23)
     sysex.push(this.channel);
     sysex.push(parameter);
@@ -83,14 +86,17 @@ Channel.prototype.setFromMidi = function(param, high, low) {
             var db = Math.round((rawValue / 16) - 80);
             this.volume_db = db;
             debug("Channel", this.channel, "set volume", db, "dB");
+            this.emitMidiEvent('vol', undefined, db);
             break;
         case 70:
         case 72:
         case 74:
         case 76:
             var aux = (param - 70) / 2;
-            this.aux[aux].db = Math.round((rawValue / 16) - 80);
+            var db = Math.round((rawValue / 16) - 80);
+            this.aux[aux].db = db;
             debug("Channel", this.channel, "set aux", aux, "send", this.aux[aux].db, "dB");
+            this.emitMidiEvent('aux', aux, db);
             break;
         case 71:
         case 73:
@@ -99,9 +105,24 @@ Channel.prototype.setFromMidi = function(param, high, low) {
             var aux = (param - 71) / 2;
             this.aux[aux].pre = (rawValue === 1);
             debug("Channel", this.channel, "set aux", aux, "pre", this.aux[aux].pre);
+            this.emitMidiEvent('aux_pre');
             break;
     }
 };
+
+Channel.prototype.emitMidiEvent = function(eventName, parameter, newValue) {
+    this.events.emit(eventName, {
+        channel: this,
+        parameter: parameter,
+        value: newValue
+    });
+    this.events.emit('midi', {
+        channel: this,
+        setting: eventName,
+        parameter: parameter,
+        value: newValue
+    });
+}
 
 /**
  * 
@@ -110,7 +131,9 @@ Channel.prototype.setFromMidi = function(param, high, low) {
  * @returns {Behringer}
  */
 var Behringer = function (out, deviceChannel, input) {
+    this.events = Mitt();
     this.midi_out = out;
+    this.eventForward = Behringer.prototype.forwardChannelEvent.bind(this);
     Behringer.prototype.setDeviceChannel.call(this, deviceChannel);
     Behringer.prototype.createChannels.call(this);
     if (input) {
@@ -134,10 +157,15 @@ Behringer.prototype.initMidiReceive = function (midi_in) {
     this.midi_in.on("message", this.receiveMidiInput.bind(this));
 };
 
+Behringer.prototype.forwardChannelEvent = function(type, param) {
+    this.events.emit(type, param);
+};
+
 Behringer.prototype.createChannels = function() {
     this.channels = [];
     for (var channel_number = 1; channel_number < 33; channel_number++) {
         this.channels[channel_number] = new Channel(channel_number, this);
+        this.channels[channel_number].events.on('*', this.eventForward);
     }
     this.channels[65] = new Channel(65, this); // master left
     this.channels[66] = new Channel(66, this); // master right
