@@ -8,6 +8,7 @@ var toHexString = function(intArray) {
 }
 
 const ALL_DEVICES = 0x60;
+const PARAMETER_CHANGE = 0x20;
 
 /**
  * 
@@ -68,7 +69,7 @@ Channel.prototype.fullrangeValue = function(db_fraction) {
 
 Channel.prototype.paramChange = function(parameter, parameterValue) {
     var sysex = [];
-    sysex.push(0x20); // function code, 20 = parameter change
+    sysex.push(PARAMETER_CHANGE); // function code
     sysex.push(1); // number of parameter changes (up to 23)
     sysex.push(this.channel);
     sysex.push(parameter);
