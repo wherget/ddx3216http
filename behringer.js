@@ -10,6 +10,23 @@ var toHexString = function(intArray) {
 const ALL_DEVICES = 0x60;
 const PARAMETER_CHANGE = 0x20;
 
+function getDefaultVolume(channel_number) {
+    if (channel_number >= 33 && channel_number <= 48) {
+        return 0;
+    }
+    if (channel_number >= 49 && channel_number <= 52) {
+        return -80;
+    }
+    if (channel_number >= 53 && channel_number <= 56) {
+        return 0;
+    }
+    if (channel_number >= 57 && channel_number <= 64) {
+        return -12;
+    }
+
+    return -80;
+}
+
 /**
  * 
  * @param {number} channel_number
@@ -20,8 +37,16 @@ var Channel = function (channel_number, connection) {
     this.events = Mitt();
     this.channel = channel_number - 1;
     this.connection = connection;
-    this.volume_db = -80;
+    this.volume_db = getDefaultVolume(channel_number);
+    this.mute = 0;
+    this.pan_db = 0;
     this.aux = [
+        {db: -80, pre: false},
+        {db: -80, pre: false},
+        {db: -80, pre: false},
+        {db: -80, pre: false}
+    ];
+    this.fx = [
         {db: -80, pre: false},
         {db: -80, pre: false},
         {db: -80, pre: false},
@@ -50,6 +75,27 @@ Channel.prototype.setAuxPre = function(aux_ch, isPre) {
     this.connection.sendCommand(sysex);
 };
 
+Channel.prototype.setFxSend = function(fx_ch, db) {
+    this.fx[fx_ch - 1].db = db;
+    // fx1=80, fx2=82, ...
+    var parameterNumber = ((fx_ch - 1) * 2) + 80;
+    var dBValue = this.fullrangeValue(db);
+    var sysex = this.paramChange(parameterNumber, dBValue);
+    this.connection.sendCommand(sysex);
+};
+
+Channel.prototype.getFxSend = function(fx_ch) {
+    return this.fx[fx_ch - 1].db;
+};
+
+Channel.prototype.setFxPre = function(fx_ch, isPre) {
+    this.fx[fx_ch - 1].pre = isPre;
+    // pre-post fx1=81, fx2=83, ...
+    var parameterNumber = ((fx_ch - 1) * 2) + 81;
+    var sysex = this.paramChange(parameterNumber, isPre ? 1 : 0);
+    this.connection.sendCommand(sysex);
+};
+
 Channel.prototype.setVolume = function(dB) {
     this.volume_db = dB;
     var sysex = this.paramChange(1, this.fullrangeValue(dB));
@@ -58,6 +104,26 @@ Channel.prototype.setVolume = function(dB) {
 
 Channel.prototype.getVolume = function() {
    return this.volume_db;
+}
+
+Channel.prototype.setMute = function(value) {
+    this.mute = value;
+    var sysex = this.paramChange(2, Number(value));
+    this.connection.sendCommand(sysex);
+}
+
+Channel.prototype.getMute = function() {
+    return this.mute;
+}
+
+Channel.prototype.setPan = function(dB) {
+    this.pan_db = dB;
+    var sysex = this.paramChange(3, Math.round(Number(dB) + 30));
+    this.connection.sendCommand(sysex);
+}
+
+Channel.prototype.getPan = function() {
+    return this.pan_db;
 }
 
 Channel.prototype.fullrangeValue = function(db_fraction) {
@@ -83,22 +149,32 @@ Channel.prototype.setFromMidi = function(param, high, low) {
     var rawValue = (high << 7) | low;
     switch(param) {
         case 1: // volume
-            var db = Math.round((rawValue / 16) - 80);
+            var db = (rawValue / 16) - 80;
             this.volume_db = db;
             debug("Channel", this.channel, "set volume", db, "dB");
             this.emitMidiEvent('vol', undefined, db);
             break;
-        case 70:
+        case 2: // mute
+            this.mute = rawValue;
+            debug("Channel", this.channel, "set mute", rawValue);
+            this.emitMidiEvent('mute', undefined, rawValue);
+            break;
+        case 3: // pan
+            this.pan_db = -30 + rawValue;
+            debug("Channel", this.channel, "set pan", this.pan_db);
+            this.emitMidiEvent('pan', undefined, this.pan_db);
+            break;    
+        case 70: // Aux volume
         case 72:
         case 74:
         case 76:
             var aux = (param - 70) / 2;
-            var db = Math.round((rawValue / 16) - 80);
+            var db = (rawValue / 16) - 80;
             this.aux[aux].db = db;
             debug("Channel", this.channel, "set aux", aux, "send", this.aux[aux].db, "dB");
             this.emitMidiEvent('aux', aux, db);
             break;
-        case 71:
+        case 71: // Aux pre/post
         case 73:
         case 75:
         case 77:
@@ -107,6 +183,25 @@ Channel.prototype.setFromMidi = function(param, high, low) {
             debug("Channel", this.channel, "set aux", aux, "pre", this.aux[aux].pre);
             this.emitMidiEvent('aux_pre');
             break;
+        case 80: // Fx volume
+        case 82:
+        case 84:
+        case 86:
+            var fx = (param - 80) / 2;
+            var db = (rawValue / 16) - 80;
+            this.fx[fx].db = db;
+            debug("Channel", this.channel, "set fx", fx, "send", this.fx[fx].db, "dB");
+            this.emitMidiEvent('fx', fx, db);
+            break;
+        case 81: // Fx pre/post
+        case 83:
+        case 85:
+        case 87:
+            var fx = (param - 81) / 2;
+            this.fx[fx].pre = (rawValue === 1);
+            debug("Channel", this.channel, "set fx", fx, "pre", this.fx[fx].pre);
+            this.emitMidiEvent('fx_pre');
+            break;            
     }
 };
 
@@ -163,7 +258,7 @@ Behringer.prototype.forwardChannelEvent = function(type, param) {
 
 Behringer.prototype.createChannels = function() {
     this.channels = [];
-    for (var channel_number = 1; channel_number < 33; channel_number++) {
+    for (var channel_number = 1; channel_number < 65; channel_number++) {
         this.channels[channel_number] = new Channel(channel_number, this);
         this.channels[channel_number].events.on('*', this.eventForward);
     }

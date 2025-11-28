@@ -1,21 +1,24 @@
 {
   "name": "ddx3216http",
   "description": "Remote control a Behringer DDX3216 with a browser",
-  "version": "0.4.1",
+  "version": "0.6.0",
   "main": "./main.js",
-  "author": {
-    "name": "Wolfgang H"
-  },
+  "contributors": [
+    {
+      "name": "Wolfgang H"
+    },
+    {
+      "name": "Felix Gertz"
+    }
+  ],
   "keywords": [],
-  "licenses": {
-    "type": "mit"
-  },
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git://github.com/l337r007/ddx3216http.git"
   },
   "bugs": {
-    "url": "http://github.com/l337r007/ddx3216http/issues"
+    "url": "https://github.com/l337r007/ddx3216http/issues"
   },
   "dependencies": {
     "argparse": "^2.0.1",

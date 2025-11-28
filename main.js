@@ -58,10 +58,25 @@ io.on('connection', function(socket){
       debug("Ch", cmd.channel, "Aux", cmd.parameter, "@", cmd.value);
       desk.channel(cmd.channel).setAuxSend(cmd.parameter, cmd.value);
   });
+  socket.on('fx', function (message) {
+      var cmd = JSON.parse(message);
+      debug("Ch", cmd.channel, "Fx", cmd.parameter, "@", cmd.value);
+      desk.channel(cmd.channel).setFxSend(cmd.parameter, cmd.value);
+  });
   socket.on('vol', function (message) {
       var cmd = JSON.parse(message);
-      debug("Ch", cmd.channel, "@", cmd.value);
+      debug("Ch", cmd.channel, "@ vol", cmd.value);
       desk.channel(cmd.channel).setVolume(cmd.value);
+  });
+  socket.on('mute', function (message) {
+      var cmd = JSON.parse(message);
+      debug("Ch", cmd.channel, "@ mute", cmd.value);
+      desk.channel(cmd.channel).setMute(cmd.value);
+  });
+  socket.on('pan', function (message) {
+      var cmd = JSON.parse(message);
+      debug("Ch", cmd.channel, "@ pan", cmd.value);
+      desk.channel(cmd.channel).setPan(cmd.value);
   });
   socket.on('get', function (message, cb) {
       var cmd = JSON.parse(message);
@@ -71,8 +86,17 @@ io.on('connection', function(socket){
           case "vol":
               cb(channel.getVolume());
               break;
+          case "mute":
+              cb(channel.getMute());
+              break;
+          case "pan":
+              cb(channel.getPan());
+              break;
           case "aux":
-              cb(channel.getAuxSend(cmd.parameter));
+              cb(channel.getAuxSend(cmd.parameter), cmd.parameter);
+              break;
+          case "fx":
+              cb(channel.getFxSend(cmd.parameter), cmd.parameter);
               break;
       }
   });
@@ -81,7 +105,7 @@ io.on('connection', function(socket){
 desk.ping();
 desk.events.on('midi', function(param) {
     var ch = param.channel.channel+1;
-    debug('Forward Midi to Web: ', ch);
+    debug('Forward Midi to Web: ', ch, param.setting, param.parameter, param.value);
     var parameter = param.parameter;
     if (parameter !== undefined) {
         parameter += 1;

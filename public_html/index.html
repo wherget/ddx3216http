@@ -1,64 +1,80 @@
 <!doctype html>
-<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang=""> <![endif]-->
-<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8" lang=""> <![endif]-->
-<!--[if IE 8]>         <html class="no-js lt-ie9" lang=""> <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang=""> <!--<![endif]-->
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-        <title></title>
-        <meta name="description" content="">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="apple-touch-icon" href="apple-touch-icon.png">
+<html>
 
-        <link rel="stylesheet" href="css/bootstrap.min.css">
-        <style>
-            body {
-                padding-top: 50px;
-                padding-bottom: 20px;
-            }
-        </style>
-        <link rel="stylesheet" href="css/bootstrap-theme.min.css">
-        <link rel="stylesheet" href="css/main.css">
-        <link rel="stylesheet" href="css/slider.css">
+<head>
+  <meta charset="utf-8" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta name="viewport" content="minimal-ui,width=device-width,initial-scale=1" />
+  <title>Uli Master 3216</title>
+  <link rel="stylesheet" href="css/ulimaster.css">
+  <style></style>
+  <script>
+    const CHANNEL_COLORS = [
+      "#ff6b6b", "#ffa94d", "#f9c74f", "#90be6d", "#4d908e", "#577590", "#277da1", "#9d4edd",
+      "#f72585", "#7209b7", "#4361ee", "#4cc9f0", "#4895ef", "#560bad", "#70c1b3", "#e63946",
+      "#b3b359", "#59b3b3", "#a64d4d", "#4da64d", "#4d4da6", "#a64da6", "#a6a64d", "#4da6a6",
+      "#993333", "#339933", "#333399", "#993399", "#999933", "#339999", "#b36666", "#66b366",
+      "#66b3b3", "#b366b3", "#b3b366", "#66b3b3", "#804d4d", "#4d804d", "#4d4d80", "#804d80",
+      "#80804d", "#4d8080", "#996666", "#669966", "#666699", "#996699", "#999966", "#669999",
+      "#b38080", "#80b380", "#80b3b3", "#b380b3", "#b3b380", "#80b3b3", "#993d3d", "#3d993d",
+      "#3d3d99", "#993d99", "#99993d", "#3d9999", "#b35959", "#59b359", "#59b3b3", "#b359b3"
+    ];
+  </script>
+</head>
 
-        <script src="js/vendor/modernizr-2.8.3-respond-1.4.2.min.js"></script>
-    </head>
-    <body>
-        <!--[if lt IE 8]>
-            <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
-        <![endif]-->
-
-        <div class="container">
-            <!-- Example row of columns -->
-            <div class="row">
-                <div class="col-lg-12">
-                    <h1>Behinger</h1>
-                    <hr>
-                    <p>
-                        <a class="btn btn-lg btn-default" href="master.html">Channel Volumes</a>
-                    </p>
-                    <p>
-                    <a class="btn btn-lg btn-default" href="aux1.html">Aux 1</a>
-                    <a class="btn btn-lg btn-default" href="aux2.html">Aux 2</a>
-                    <a class="btn btn-lg btn-default" href="aux3.html">Aux 3</a>
-                    <a class="btn btn-lg btn-default" href="aux4.html">Aux 4</a>
-                    </p>
-                </div>
-            </div>
-
-            <hr>
-
-            <footer>
-                <p>ddx3216http</p>
-            </footer>
+<body>
+  <div class="app">
+    <header>
+        <h1>Uli Master 3216</h1>
+        <div class="page-buttons">
+          <button class="page-btn" data-page="1">Ch 1-16</button>
+          <button class="page-btn" data-page="2">Ch 17-32</button>
+          <button class="page-btn" data-page="3">Bus 1-16</button>
+          <button class="page-btn" data-page="4">Aux/FX</button>
+          <button class="sectype-btn">Pan</button>
         </div>
-        <script src="js/vendor/jquery-1.11.2.js"></script>
-        <script src="js/vendor/bootstrap.min.js"></script>
-        <script src="js/vendor/bootstrap-slider.js"></script>
-        <script src="/socket.io/socket.io.js"></script>
+        <img src="expand.svg" width="28" height="28" class="fullscreen-icon">
+    </header>
+    <main class="mixer" id="mixer">
+      
+    </main>
+  </div>
 
-        <script src="js/main.js"></script>
+  <template id="fader">
+    <div class="fader">
+      <div class="colorbar"></div>
+      <input class="fader-name-input">
+      <div class="fine-tune">
+        <button class="minus-btn">-</button>
+        <button class="plus-btn">+</button>
+      </div>
+      <div class="db-value-indicator">+0.0</div>
+      <div class="fader-line">
+        <div class="fader-container">
+          <div class="fader-left-gap"></div>
+          <div class="fader-slide">
+            <img src="fader-knob-optimized-2.svg" class="fader-knob">
+          </div>
+          <div class="fader-right-ticks"></div>
+        </div>
+        <div class="fader-mouse-overlay"></div>
+      </div>
+      <div class="secondary-function">
+        <div class="sec-value-indicator">C</div>
+        <div class="sec-container">
+          <div class="sec-slide">
+            <div class="sec-slide-indicator"></div>
+          </div>
+        </div>
+        <div class="sec-mouse-overlay"></div>
+      </div>
+      <button class="mute-btn">Mute</button>
+      <div class="colorbar bottom"></div>
+    </div>
+  </template>
 
-    </body>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="js/ulimaster.js"></script>
+</body>
+
 </html>
