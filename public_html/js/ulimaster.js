@@ -228,7 +228,7 @@ function createFader(faderIndex, mixerContainer, faderTemplate) {
     containerMouseMove(event);
   }
 
-  function containerTouchEnd(event) {
+  function containerTouchEnd() {
     knobMouseOffset = 0;
   }
 
@@ -263,7 +263,7 @@ function createFader(faderIndex, mixerContainer, faderTemplate) {
 
   const muteButton = fader.querySelector(".mute-btn");
 
-  const handleMuteButtonClick = function (event) {
+  const handleMuteButtonClick = function () {
     muteButton.classList.toggle('active');
 
     sockIO.emit("mute",
@@ -280,11 +280,11 @@ function createFader(faderIndex, mixerContainer, faderTemplate) {
   const minusButton = fader.querySelector(".minus-btn");
   const plusButton = fader.querySelector(".plus-btn");
 
-  minusButton.addEventListener("click", function (event) {
+  minusButton.addEventListener("click", function () {
     changeFaderValue(dbToNormalized(normalizedToDb(faderValue) - 0.1));
     updateFader();
   });
-  plusButton.addEventListener("click", function (event) {
+  plusButton.addEventListener("click", function () {
     changeFaderValue(dbToNormalized(normalizedToDb(faderValue) + 0.1));
     updateFader();
   });
