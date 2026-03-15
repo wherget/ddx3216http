@@ -262,7 +262,7 @@ header .sectype-btn::first-letter {
 }
 
 .fader-right-ticks {
-  flex-grow: 1;
+  flex-grow: 3;
   pointer-events: none;
 }
 
@@ -271,7 +271,7 @@ header .sectype-btn::first-letter {
   box-sizing: border-box;
 
   position: relative;
-  width: 18px;
+  width: calc(100% - 3ch);
   height: 1px;
   background: var(--color-fader-ticks);
   margin-top: -1px;
@@ -323,7 +323,7 @@ header .sectype-btn::first-letter {
 .marker0 {
   z-index: 1;
   position: relative;
-  width: 28px;
+  width: calc(100% - 2ch);
   height: 2px;
   background: var(--color-fader-zero-tick);
   border-radius: 1px;
