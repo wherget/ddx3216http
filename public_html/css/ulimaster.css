@@ -170,10 +170,12 @@ header .sectype-btn::first-letter {
 }
 
 .fine-tune .minus-btn {
-  margin-left: 8px;
+  margin-left: 3px;
+  margin-right: 2px;
 }
 .fine-tune .plus-btn {
-  margin-right: 8px;
+  margin-left: 2px;
+  margin-right: 3px;
 }
 
 .db-value-indicator {
