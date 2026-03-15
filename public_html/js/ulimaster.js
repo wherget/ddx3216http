@@ -14,6 +14,22 @@ function hasTouchSupport() {
   return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 }
 
+function createDoubleTapTimer() {
+  let tappedOnce = false;
+  return function() {
+    if (tappedOnce) {
+      tappedOnce = false;
+      return true;
+    } else {
+      tappedOnce = true;
+      setTimeout(function () {
+        tappedOnce = false;
+      }, 250);
+    }
+    return false;
+  }
+}
+
 function sysExPanToNormalized(sysExValue) {
   return sysExValue / 60
 }
@@ -189,21 +205,14 @@ function createFader(faderIndex, mixerContainer, faderTemplate) {
     }
   }
 
-  let faderTappedTwice = false;
+  const checkTappedTwice = createDoubleTapTimer();
 
   function containerTouchStart(event) {
-    if (faderTappedTwice) {
-      faderTappedTwice = false;
+    if (checkTappedTwice()) {
       changeFaderValue(dbToNormalized(0));
       updateFader();
       return;
-    } else {
-      faderTappedTwice = true;
-      setTimeout(function () {
-        faderTappedTwice = false;
-      }, 250);
     }
-
     const knobRect = knob.getBoundingClientRect();
     const rect = event.target.getBoundingClientRect();
     let mouseY = (event.clientY == null && event.touches ? event.touches[0].clientY : event.clientY) - rect.top;
@@ -352,23 +361,17 @@ function createFader(faderIndex, mixerContainer, faderTemplate) {
     }
   }
 
-  let secTappedTwice = false;
+  const secTappedTwice = createDoubleTapTimer();
 
   function secOverlayMouseDown(event) {
     if (event.clientX == null) {
       return;
     }
 
-    if (secTappedTwice) {
-      secTappedTwice = false;
+    if (secTappedTwice()) {
       changeSecValue(currentSecType === "pan" ? 0.5 : 0);
       updateSecFader();
       return;
-    } else {
-      secTappedTwice = true;
-      setTimeout(function () {
-        secTappedTwice = false;
-      }, 250);
     }
 
     secOverlayMouseMove(event);
