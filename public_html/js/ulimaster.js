@@ -214,13 +214,15 @@ function createFader(faderIndex, mixerContainer, faderTemplate) {
       return;
     }
     const knobRect = knob.getBoundingClientRect();
-    const rect = event.target.getBoundingClientRect();
-    let mouseY = (event.clientY == null && event.touches ? event.touches[0].clientY : event.clientY) - rect.top;
+    const mouseY = (event.clientY == null && event.touches ? event.touches[0].clientY : event.clientY);
 
-    const mouseOffset = parseFloat(knob.style.top) - mouseY;
-
-    if (!isNaN(mouseOffset) && Math.abs(mouseOffset) <= knobRect.height / 2) {
+    const knobMidpoint = knobRect.top + (knobRect.bottom - knobRect.top) / 2
+    const mouseOffset = knobMidpoint - mouseY;
+    const isMouseInsideKnob = !isNaN(mouseOffset) && Math.abs(mouseOffset) <= (knobRect.height / 2);
+    if (isMouseInsideKnob) {
       knobMouseOffset = mouseOffset;
+    } else {
+      knobMouseOffset = false;
     }
 
     containerMouseMove(event);
@@ -230,19 +232,23 @@ function createFader(faderIndex, mixerContainer, faderTemplate) {
     knobMouseOffset = 0;
   }
 
+  function clamp(x, a, b) { return Math.min(b, Math.max(x, a)); }
+
   function containerMouseMove(event) {
-    const rect = event.target.getBoundingClientRect();
-    let mouseY = (event.clientY == null && event.touches ? event.touches[0].clientY : event.clientY) - rect.top;
+    const rect = faderContainer.getBoundingClientRect();
+    const mouseY = (event.clientY == null && event.touches ? event.touches[0].clientY : event.clientY);
+    let knobMidpointY = mouseY - rect.top
 
     if (knobMouseOffset) {
-      mouseY += knobMouseOffset;
+      knobMidpointY += knobMouseOffset;
     }
 
-    const positionY = 1 - mouseY / rect.height;
+    const positionY = 1 - knobMidpointY / rect.height;
 
     if (event.buttons || (event.touches && event.touches.length)) {
-      if (positionY >= 0 && positionY <= 1 && positionY !== faderValue) {
-        changeFaderValue(positionY);
+      const positionPercentage = clamp(positionY, 0, 1);
+      if (positionPercentage !== faderValue) {
+        changeFaderValue(positionPercentage);
         updateFader();
       }
     }
@@ -302,7 +308,7 @@ function createFader(faderIndex, mixerContainer, faderTemplate) {
       secSlideIndicator.style.width = (100 * sysExPanToNormalized(normalizedPanToSysEx(value))) + "%";
 
       displayValue = normalizedPanToSysEx(value) - 30;
-  
+
       if (displayValue === 0) {
         displayValue = "C";
       } else if (displayValue < 0) {
@@ -573,7 +579,7 @@ onDocumentReady(() => {
   secTypeButton.addEventListener("click", () => {
     const currentSecTypeIndex = secTypes.findIndex((type) => type === currentSecType);
     const nextSecType = secTypes[currentSecTypeIndex === secTypes.length-1 ? 0 : currentSecTypeIndex+1];
-  
+
     setSecType(secTypeButton, nextSecType);
   });
 
