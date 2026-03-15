@@ -39,7 +39,7 @@ var Channel = function (channel_number, connection) {
     this.connection = connection;
     this.volume_db = getDefaultVolume(channel_number);
     this.mute = 0;
-    this.pan_db = 0;
+    this.pan = 0;
     this.aux = [
         {db: -80, pre: false},
         {db: -80, pre: false},
@@ -116,14 +116,15 @@ Channel.prototype.getMute = function() {
     return this.mute;
 }
 
-Channel.prototype.setPan = function(dB) {
-    this.pan_db = dB;
-    var sysex = this.paramChange(3, Math.round(Number(dB) + 30));
+Channel.prototype.setPan = function(rightPercent) {
+    // in terms of values from -1..1 (0 means centered)
+    this.pan = rightPercent;
+    var sysex = this.paramChange(3, Math.round(Number(rightPercent * 30) + 30));
     this.connection.sendCommand(sysex);
 }
 
 Channel.prototype.getPan = function() {
-    return this.pan_db;
+    return this.pan;
 }
 
 Channel.prototype.fullrangeValue = function(db_fraction) {
@@ -160,10 +161,10 @@ Channel.prototype.setFromMidi = function(param, high, low) {
             this.emitMidiEvent('mute', undefined, rawValue);
             break;
         case 3: // pan
-            this.pan_db = -30 + rawValue;
-            debug("Channel", this.channel, "set pan", this.pan_db);
-            this.emitMidiEvent('pan', undefined, this.pan_db);
-            break;    
+            this.pan = (-30 + rawValue) / 30; // raw is in terms of 0..60 (30 means centered)
+            debug("Channel", this.channel, "set pan", this.pan);
+            this.emitMidiEvent('pan', undefined, this.pan);
+            break;
         case 70: // Aux volume
         case 72:
         case 74:

@@ -40,13 +40,16 @@ function createDoubleTapTimer() {
   }
 }
 
-function sysExPanToNormalized(sysExValue) {
-  return sysExValue / 60
+function backendPanToPercentage(backendPan) {
+  // backend is in -1..1, we expect 0..1
+  return (backendPan + 1) / 2;
 }
 
-function normalizedPanToSysEx(value) {
-  return Math.round(value * 60);
+function percentageToBackendPan(percentage) {
+  // we have 0..1, backend wants -1..1
+  return percentage * 2 - 1;
 }
+
 
 function dbToNormalized(y) {
   y = -y + 12;
@@ -313,9 +316,9 @@ function createFader(faderIndex, mixerContainer, faderTemplate) {
     let displayValue = "";
 
     if (secTypes[currentSecType].param === "pan") {
-      secSlideIndicator.style.width = (100 * sysExPanToNormalized(normalizedPanToSysEx(value))) + "%";
+      secSlideIndicator.style.width = (100 * value) + "%";
 
-      displayValue = normalizedPanToSysEx(value) - 30;
+      displayValue = Math.floor(percentageToBackendPan(value) * 30);
 
       if (displayValue === 0) {
         displayValue = "C";
@@ -353,7 +356,7 @@ function createFader(faderIndex, mixerContainer, faderTemplate) {
         sockIO.emit("pan", {
           "channel": faderIndex + 1,
           "parameter": "",
-          "value": normalizedPanToSysEx(value) - 30,
+          "value": percentageToBackendPan(value),
         });
       } else {
         const type = secTypes[currentSecType].param;
@@ -433,8 +436,8 @@ function createFader(faderIndex, mixerContainer, faderTemplate) {
     });
   }
 
-  function setPan(db) {
-    secValues[secValueIndex("pan")] = sysExPanToNormalized(db + 30);
+  function setPan(backendPan) {
+    secValues[secValueIndex("pan")] = backendPanToPercentage(backendPan);
     updateSecFader();
   }
 
