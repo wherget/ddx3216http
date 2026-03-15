@@ -19,6 +19,7 @@ const secTypes = [
   {param:"fx", sub: 4}
 ];
 let currentSecType = Number(localStorage.getItem("currentSecType") || 0);
+if (Number.isNaN(currentSecType)) { currentSecType = 0; /* upgrade from param storage */}
 
 function hasTouchSupport() {
   return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
