@@ -75,7 +75,7 @@ function normalizedToDb(x) {
     x = 0
   } else if (x > 1) {
     x = 1
-  };
+  }
 
   const index = (1 - x) * (sequence.length - 1);
 
