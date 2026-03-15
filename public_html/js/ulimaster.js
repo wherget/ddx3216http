@@ -232,7 +232,9 @@ function createFader(faderIndex, mixerContainer, faderTemplate) {
     knobMouseOffset = 0;
   }
 
-  function clamp(x, a, b) { return Math.min(b, Math.max(x, a)); }
+  function clamp(value, lowerLimit, upperLimit) {
+    return Math.min(upperLimit, Math.max(value, lowerLimit));
+  }
 
   function containerMouseMove(event) {
     const rect = faderContainer.getBoundingClientRect();
@@ -336,11 +338,7 @@ function createFader(faderIndex, mixerContainer, faderTemplate) {
   }
 
   function changeSecValue(value) {
-    if (value > 1) {
-      value = 1;
-    } else if (value < 0) {
-      value = 0;
-    }
+    value = clamp(value, 0, 1);
 
     if (value !== secValues[currentSecType]) {
       secValues[currentSecType] = value;
