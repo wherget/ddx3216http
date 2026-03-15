@@ -83,6 +83,27 @@ function onDocumentReady(callback) {
   }
 }
 
+function defaultFaderName(faderIndex) {
+  // 0..31 are the "regular" channels 1..32
+  const BUS_OFFSET = 31;
+  const AUX_OFFSET = BUS_OFFSET + 16;
+  const FX_OFFSET = AUX_OFFSET + 4;
+  const RETURN_OFFSET = FX_OFFSET + 4;
+  if (faderIndex > BUS_OFFSET && faderIndex <= AUX_OFFSET) {
+    return "Bus "+(faderIndex-BUS_OFFSET);
+  } else if (faderIndex > AUX_OFFSET && faderIndex <= FX_OFFSET) {
+    return "Aux "+(faderIndex-AUX_OFFSET);
+  } else if (faderIndex > FX_OFFSET && faderIndex <= RETURN_OFFSET) {
+    return "Send Fx "+(faderIndex-FX_OFFSET);
+  } else if (faderIndex > RETURN_OFFSET) {
+    const stereoSide = (faderIndex % 2 === 0) ? "L" : "R";
+    const fxChannel = Math.floor((faderIndex-RETURN_OFFSET+1) /2);
+    return "Fx "+fxChannel+" "+stereoSide;
+  } else {
+    return ""+(faderIndex+1);
+  }
+}
+
 function createFader(faderIndex, mixerContainer, faderTemplate) {
   let faderValue = dbToNormalized(0); // 0..1
 
@@ -109,14 +130,13 @@ function createFader(faderIndex, mixerContainer, faderTemplate) {
     fader.querySelector(".colorbar.bottom").style.background = color;
   }
 
-  const faderName = localStorage.getItem("faderName" + faderIndex) || "";
-
+  const faderName = localStorage.getItem("faderName" + faderIndex) || defaultFaderName(faderIndex);
   const nameInput = fader.querySelector(".fader-name-input");
-  nameInput.value = faderName === "" ? "" + (faderIndex + 1) : faderName;
+  nameInput.value = faderName;
 
   nameInput.addEventListener("change", () => {
     if (nameInput.value === "") {
-      nameInput.value = faderIndex + 1 + "";
+      nameInput.value = defaultFaderName(faderIndex);
     }
 
     localStorage.setItem("faderName" + faderIndex, nameInput.value);
