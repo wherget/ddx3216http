@@ -7,8 +7,18 @@ const maxDb = 12;
 const faders = []
 let selectedPageNo = parseInt(localStorage.getItem("selectedPageNo") || 1, 10);
 
-let currentSecType = localStorage.getItem("currentSecType") || "pan";
-const secTypes = ["pan", "aux1", "aux2", "aux3", "aux4", "fx1", "fx2", "fx3", "fx4"];
+const secTypes = [
+  {param:"pan", reset: 0.5},
+  {param:"aux", sub: 1},
+  {param:"aux", sub: 2},
+  {param:"aux", sub: 3},
+  {param:"aux", sub: 4},
+  {param:"fx", sub: 1},
+  {param:"fx", sub: 2},
+  {param:"fx", sub: 3},
+  {param:"fx", sub: 4}
+];
+let currentSecType = Number(localStorage.getItem("currentSecType") || 0);
 
 function hasTouchSupport() {
   return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
@@ -306,7 +316,7 @@ function createFader(faderIndex, mixerContainer, faderTemplate) {
     const value = secValues[currentSecType];
     let displayValue = "";
 
-    if (currentSecType === "pan") {
+    if (secTypes[currentSecType].param === "pan") {
       secSlideIndicator.style.width = (100 * sysExPanToNormalized(normalizedPanToSysEx(value))) + "%";
 
       displayValue = normalizedPanToSysEx(value) - 30;
@@ -324,10 +334,10 @@ function createFader(faderIndex, mixerContainer, faderTemplate) {
       displayValue = normalizedToDb(value).toFixed(1);
     }
 
-    secValueIndicator.innerHTML = "<span>" + currentSecType + "</span><br>" + displayValue;
+    secValueIndicator.innerHTML = "<span>" + secName(currentSecType) + "</span><br>" + displayValue;
 
     if (faderIndex >= 56 && faderIndex < 64) {
-      if (currentSecType.startsWith("fx")) {
+      if (secTypes[currentSecType].param === "fx") {
         if (!secFunction.classList.contains("disabled")) {
           secFunction.classList.add("disabled");
         }
@@ -343,7 +353,7 @@ function createFader(faderIndex, mixerContainer, faderTemplate) {
     if (value !== secValues[currentSecType]) {
       secValues[currentSecType] = value;
 
-      if (currentSecType === "pan") {
+      if (secTypes[currentSecType].param === "pan") {
         sockIO.emit("pan",
           JSON.stringify({
             "channel": faderIndex + 1,
@@ -352,12 +362,12 @@ function createFader(faderIndex, mixerContainer, faderTemplate) {
           })
         );
       } else {
-        const type = currentSecType.startsWith("aux") ? "aux" : "fx";
+        const type = secTypes[currentSecType].param;
 
         sockIO.emit(type,
           JSON.stringify({
             "channel": faderIndex + 1,
-            "parameter": currentSecType.substring(type.length),
+            "parameter": secTypes[currentSecType].sub,
             "value": normalizedToDb(value) ,
           })
         );
@@ -373,7 +383,7 @@ function createFader(faderIndex, mixerContainer, faderTemplate) {
     }
 
     if (secTappedTwice()) {
-      changeSecValue(currentSecType === "pan" ? 0.5 : 0);
+      changeSecValue(secTypes[currentSecType].reset || 0);
       updateSecFader();
       return;
     }
@@ -426,18 +436,24 @@ function createFader(faderIndex, mixerContainer, faderTemplate) {
     }
   }
 
+  function secValueIndex(param, sub) {
+    return secTypes.findIndex(function (type) {
+      return type.param === param && (sub ? type.sub === sub : true)
+    });
+  }
+
   function setPan(db) {
-    secValues["pan"] = sysExPanToNormalized(db + 30);
+    secValues[secValueIndex("pan")] = sysExPanToNormalized(db + 30);
     updateSecFader();
   }
 
   function setAux(db, parameter) {
-    secValues["aux"+parameter] = dbToNormalized(db);
+    secValues[secValueIndex("aux", parameter)] = dbToNormalized(db);
     updateSecFader();
   }
 
   function setFx(db, parameter) {
-    secValues["fx"+parameter] = dbToNormalized(db);
+    secValues[secValueIndex("fx", parameter)] = dbToNormalized(db);
     updateSecFader();
   }
 
@@ -531,10 +547,18 @@ function redrawPage(mixerContainer) {
   }
 }
 
+function uppercaseFirst(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function secName(secType) {
+  return uppercaseFirst(secTypes[secType].param) + (secTypes[secType].sub || "");
+}
+
 function setSecType(secTypeButton, secType) {
   currentSecType = secType;
   localStorage.setItem("currentSecType", currentSecType);
-  secTypeButton.innerHTML = currentSecType;
+  secTypeButton.innerHTML = secName(currentSecType);
 
   for (let faderIndex = 0; faderIndex < 64; faderIndex++) {
     if (faderIndex >= 16 * (selectedPageNo - 1) && faderIndex <= 16 * selectedPageNo - 1) {
@@ -575,8 +599,7 @@ onDocumentReady(() => {
   setSecType(secTypeButton, currentSecType);
 
   secTypeButton.addEventListener("click", () => {
-    const currentSecTypeIndex = secTypes.findIndex((type) => type === currentSecType);
-    const nextSecType = secTypes[currentSecTypeIndex === secTypes.length-1 ? 0 : currentSecTypeIndex+1];
+    const nextSecType = (currentSecType + 1) % secTypes.length;
 
     setSecType(secTypeButton, nextSecType);
   });
