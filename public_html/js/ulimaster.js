@@ -307,6 +307,7 @@ function createFader(faderIndex, mixerContainer, faderTemplate) {
   }
 
   const secOverlay = fader.querySelector(".sec-mouse-overlay");
+  const secContainer = fader.querySelector(".sec-container");
 
   const secSlideIndicator = fader.querySelector(".sec-slide-indicator");
   const secValueIndicator = fader.querySelector(".sec-value-indicator");
@@ -386,16 +387,14 @@ function createFader(faderIndex, mixerContainer, faderTemplate) {
   }
 
   function secOverlayMouseMove(event) {
-    const rect = event.target.getBoundingClientRect();
+    const rect = secContainer.getBoundingClientRect();
     let mouseX = (event.clientX == null && event.touches ? event.touches[0].clientX : event.clientX) - rect.left;
 
-    const positionX = mouseX / rect.width;
+    const positionX = clamp(mouseX / rect.width, 0, 1);
 
     if (event.buttons || (event.touches && event.touches.length)) {
-      if (positionX >= 0 && positionX <= 1) {
-        changeSecValue(positionX);
-        updateSecFader();
-      }
+      changeSecValue(positionX);
+      updateSecFader();
     }
   }
 

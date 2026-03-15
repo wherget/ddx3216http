@@ -358,7 +358,8 @@ header .sectype-btn::first-letter {
 
 .sec-container {
   position: relative;
-  width: 100%;
+  width: 90%;
+  left: 5%;
 
   user-select: none;
 
