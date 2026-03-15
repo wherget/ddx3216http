@@ -205,13 +205,11 @@ function createFader(faderIndex, mixerContainer, faderTemplate) {
 
     if (value !== faderValue) {
       faderValue = value;
-      sockIO.emit("vol",
-        JSON.stringify({
-          "channel": faderIndex + 1,
-          "parameter": "",
-          "value": normalizedToDb(faderValue),
-        })
-      );
+      sockIO.emit("vol", {
+        "channel": faderIndex + 1,
+        "parameter": "",
+        "value": normalizedToDb(faderValue),
+      });
     }
   }
 
@@ -278,13 +276,11 @@ function createFader(faderIndex, mixerContainer, faderTemplate) {
   const handleMuteButtonClick = function () {
     muteButton.classList.toggle('active');
 
-    sockIO.emit("mute",
-      JSON.stringify({
-        "channel": faderIndex + 1,
-        "parameter": "",
-        "value": muteButton.classList.contains("active") ? 1 : 0,
-      })
-    );
+    sockIO.emit("mute", {
+      "channel": faderIndex + 1,
+      "parameter": "",
+      "value": muteButton.classList.contains("active") ? 1 : 0,
+    });
   }
 
   muteButton.addEventListener("click", handleMuteButtonClick);
@@ -354,23 +350,18 @@ function createFader(faderIndex, mixerContainer, faderTemplate) {
       secValues[currentSecType] = value;
 
       if (secTypes[currentSecType].param === "pan") {
-        sockIO.emit("pan",
-          JSON.stringify({
-            "channel": faderIndex + 1,
-            "parameter": "",
-            "value": normalizedPanToSysEx(value) - 30,
-          })
-        );
+        sockIO.emit("pan", {
+          "channel": faderIndex + 1,
+          "parameter": "",
+          "value": normalizedPanToSysEx(value) - 30,
+        });
       } else {
         const type = secTypes[currentSecType].param;
-
-        sockIO.emit(type,
-          JSON.stringify({
-            "channel": faderIndex + 1,
-            "parameter": secTypes[currentSecType].sub,
-            "value": normalizedToDb(value) ,
-          })
-        );
+        sockIO.emit(type, {
+          "channel": faderIndex + 1,
+          "parameter": secTypes[currentSecType].sub,
+          "value": normalizedToDb(value) ,
+        });
       }
     }
   }
@@ -458,41 +449,41 @@ function createFader(faderIndex, mixerContainer, faderTemplate) {
   }
 
   sockIO.on('connect', function () {
-    const volume = JSON.stringify({
+    const volume = {
       "channel": faderIndex + 1,
       "setting": "vol",
       "parameter": ""
-    });
+    };
 
     sockIO.emit("get", volume, setVol);
 
-    const mute = JSON.stringify({
+    const mute = {
       "channel": faderIndex + 1,
       "setting": "mute",
       "parameter": ""
-    });
+    };
 
     sockIO.emit("get", mute, setMute);
 
-    const pan = JSON.stringify({
+    const pan = {
       "channel": faderIndex + 1,
       "setting": "pan",
       "parameter": ""
-    });
+    };
 
     sockIO.emit("get", pan, setPan);
 
     for (let i=1;i<=4;i++) {
-      sockIO.emit("get", JSON.stringify({
+      sockIO.emit("get", {
         "channel": faderIndex + 1,
         "setting": "aux",
         "parameter": i
-      }), setAux);
-      sockIO.emit("get", JSON.stringify({
+      }, setAux);
+      sockIO.emit("get", {
         "channel": faderIndex + 1,
         "setting": "fx",
         "parameter": i
-      }), setFx);
+      }, setFx);
     }
   });
 

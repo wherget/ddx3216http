@@ -54,32 +54,32 @@ app.use("/", express.static("public_html"));
 io.on('connection', function(socket){
   debug('a user connected');
   socket.on('aux', function (message) {
-      var cmd = JSON.parse(message);
+      var cmd = message;
       debug("Ch", cmd.channel, "Aux", cmd.parameter, "@", cmd.value);
       desk.channel(cmd.channel).setAuxSend(cmd.parameter, cmd.value);
   });
   socket.on('fx', function (message) {
-      var cmd = JSON.parse(message);
+      var cmd = message;
       debug("Ch", cmd.channel, "Fx", cmd.parameter, "@", cmd.value);
       desk.channel(cmd.channel).setFxSend(cmd.parameter, cmd.value);
   });
   socket.on('vol', function (message) {
-      var cmd = JSON.parse(message);
+      var cmd = message;
       debug("Ch", cmd.channel, "@ vol", cmd.value);
       desk.channel(cmd.channel).setVolume(cmd.value);
   });
   socket.on('mute', function (message) {
-      var cmd = JSON.parse(message);
+      var cmd = message;
       debug("Ch", cmd.channel, "@ mute", cmd.value);
       desk.channel(cmd.channel).setMute(cmd.value);
   });
   socket.on('pan', function (message) {
-      var cmd = JSON.parse(message);
+      var cmd = message;
       debug("Ch", cmd.channel, "@ pan", cmd.value);
       desk.channel(cmd.channel).setPan(cmd.value);
   });
   socket.on('get', function (message, cb) {
-      var cmd = JSON.parse(message);
+      var cmd = message;
       debug("Get", cmd);
       var channel = desk.channel(cmd.channel);
       switch (cmd.setting) {
